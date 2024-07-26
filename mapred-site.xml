@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<configuration>
+    <property>
+        <name>mapreduce.job.tracker</name>
+        <value>master:30005</value>
+    </property>
+    <property>
+        <name>mapred.framework.name</name>
+        <value>yarn</value>
+    </property>
+</configuration>
+

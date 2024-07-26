@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>/opt/hadoop/hdfs/datanode</value>
+        <final>true</final>
+    </property>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>/opt/hadoop/hdfs/namenode</value>
+        <final>true</final>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address</name>
+        <value>master:30001</value>
+    </property>
+    <property>
+        <name>dfs.replication</name>
+        <value>2</value> # Based on the number of workers you have
+    </property>
+</configuration>
+
+

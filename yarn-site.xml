@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<configuration>
+    <property>
+        <name>yarn.resourcemanager.resource-tracker.address</name>
+        <value>master:30002</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.scheduler.address</name>
+        <value>master:30003</value>
+    </property>
+    <property>
+        <name>yarn.resourcemanager.address</name>
+        <value>master:30004</value>
+    </property>
+</configuration>
+
