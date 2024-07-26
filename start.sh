@@ -2,59 +2,26 @@
 
 #iperf3 -s
 
-if [ -z $FLOTO_DEVICE_UUID ] ; then
-  echo "ERROR: Expected FLOTO_DEVICE_UUID to be defined"
+if [ -z $NODE_TYPE ] ; then
+  echo "ERROR: Expected NODE_TYPE to be defined"
   exit 1
 fi
 
-device_host="${FLOTO_DEVICE_UUID:0:7}"
-echo "Device host: $device_host"
-
-master_name=$(echo $NODES | cut -f1 -d:)
-echo "Master name: $master_name"
-
-if [ "$master_name" = "$device_host" ] ; then
-  node_type="namenode"  
-else
-  node_type="datanode"
-fi
+master_name="master"
 
 if [ ! -f /opt/hadoop/initialized ] ; then
   echo "Creating $device_host as $node_type"
-  runuser -u hduser -- mkdir /opt/hadoop/hdfs/$node_type
-
-  if [ -z $NODES ] ; then
-    # First IP is master
-    echo "ERROR: No nodes defined. Define NODE in the format \"HOSTNAME:IP;HOSTNAME:IP;HOSTNAME:IP\""
-    exit 1
-  fi
-  NODES=${NODES//;/$'\n'}  # change the semicolons to white space
-  i=0
-  echo "/opt/hadoop/etc/hadoop/workers"
-  cat /opt/hadoop/etc/hadoop/workers
-  for node in $(echo $NODES | tr ";" "\n")
-  do
-      node_name=$(echo $node | cut -f1 -d:)
-      node_ip=$(echo $node | cut -f2 -d:)
-      echo "$node_name available at $node_ip"
-      echo -e "$node_ip\t$node_name" >> /etc/hosts
-      if [ "$node_type" = "namenode" -a "$i" -ne 0 ] ; then
-        echo "$node_name" >> /opt/hadoop/etc/hadoop/workers
-      fi
-      i=$((i+1))
-  done
-  cat /opt/hadoop/etc/hadoop/workers
-  echo "/etc/hosts"
-  cat /etc/hosts
-
+  # (either "namenode" or "datanode")
+  echo "Creating node as $NODE_TYPE"
+  runuser -u hduser -- mkdir /opt/hadoop/hdfs/$NODE_TYPE
 fi
 
 # Replace master with actual hostname in config.xml files
-cd /opt/hadoop/etc/hadoop
-sed -i -e "s/master/$master_name/g" core-site.xml
-sed -i -e "s/master/$master_name/g" yarn-site.xml
-sed -i -e "s/master/$master_name/g" hdfs-site.xml
-sed -i -e "s/master/$master_name/g" mapred-site.xml
+#cd /opt/hadoop/etc/hadoop
+#sed -i -e "s/master/$master_name/g" core-site.xml
+#sed -i -e "s/master/$master_name/g" yarn-site.xml
+#sed -i -e "s/master/$master_name/g" hdfs-site.xml
+#sed -i -e "s/master/$master_name/g" mapred-site.xml
 
 
 cd /opt/hadoop
@@ -81,14 +48,14 @@ sleep 5
 #cat /etc/ssh/sshd_config
 
 netstat -tupan
-telnet localhost 30022
+#telnet localhost 30022
 
 #echo "ssh -p 30022 hduser@localhost ls /"
 #ssh -p 30022 hduser@localhost ls /
 #echo "ssh -p 30022 hduser@127.0.0.1 ls /"
 #ssh -p 30022 hduser@127.0.0.1 ls /
-echo "ssh -p 30022 hduser@10.188.2.111 ls /"
-ssh -o StrictHostKeyChecking=no -p 30022 hduser@10.188.2.111 ls /
+#echo "ssh -p 30022 hduser@10.188.2.111 ls /"
+#ssh -o StrictHostKeyChecking=no -p 30022 hduser@10.188.2.111 ls /
 #echo "ssh -p 30022 hduser@10.42.153.0 ls /"
 #ssh -p 30022 hduser@10.42.153.0 ls /
 #echo "ssh -p 30022 hduser@10.42.153.1 ls /"
