@@ -7,28 +7,50 @@ if [ -z $NODE_TYPE ] ; then
   exit 1
 fi
 
+node_type="$NODE_TYPE"
 master_name="master"
 
+# Configure namenode/datanode
+
+#iperf3 -s
 if [ ! -f /opt/hadoop/initialized ] ; then
-  echo "Creating $device_host as $node_type"
-  # (either "namenode" or "datanode")
-  echo "Creating node as $NODE_TYPE"
-  runuser -u hduser -- mkdir /opt/hadoop/hdfs/$NODE_TYPE
+  tar -xzf /usr/src/app/hadoop-3.4.0-aarch64.tar.gz -C /opt
+
+  ls /opt
+  mv /opt/hadoop-3.4.0 /opt/hadoop
+
+  mkdir -p /opt/hadoop/hdfs
+  chown hduser:hadoop -R /opt/hadoop
+
+  cd /opt/hadoop/etc/hadoop
+
+  echo "Inserting new files..."
+
+  mv /usr/src/app/core-site.xml .
+  mv /usr/src/app/hdfs-site.xml .
+  mv /usr/src/app/yarn-site.xml .
+  mv /usr/src/app/mapred-site.xml .
+
 fi
 
+cd /opt/hadoop
+
+
+# Todo: just refer to hosts using "master", "worker1", etc instead of ids
+
 # Replace master with actual hostname in config.xml files
-#cd /opt/hadoop/etc/hadoop
-#sed -i -e "s/master/$master_name/g" core-site.xml
-#sed -i -e "s/master/$master_name/g" yarn-site.xml
-#sed -i -e "s/master/$master_name/g" hdfs-site.xml
-#sed -i -e "s/master/$master_name/g" mapred-site.xml
+cd /opt/hadoop/etc/hadoop
+sed -i -e "s/master/$master_name/g" core-site.xml
+sed -i -e "s/master/$master_name/g" yarn-site.xml
+sed -i -e "s/master/$master_name/g" hdfs-site.xml
+sed -i -e "s/master/$master_name/g" mapred-site.xml
 
 
 cd /opt/hadoop
 
-ls -R /home/hduser/.ssh
-echo "ls /etc/ssh"
-ls /etc/ssh
+#ls -R /home/hduser/.ssh
+#echo "ls /etc/ssh"
+#ls /etc/ssh
 
 chown hduser:hadoop /home/hduser/.ssh
 chmod 700 /home/hduser/.ssh
@@ -39,7 +61,7 @@ chmod 755 /home/hduser
 # Start SSHd on port 30022
 mkdir -p /run/sshd
 chmod 755 /run/sshd
-/usr/sbin/sshd -p 30022
+/usr/sbin/sshd -p 30022 -d > /home/hduser/sshd_log.txt 2>&1 &
 
 sleep 5
 
@@ -47,7 +69,7 @@ sleep 5
 
 #cat /etc/ssh/sshd_config
 
-netstat -tupan
+#netstat -tupan
 #telnet localhost 30022
 
 #echo "ssh -p 30022 hduser@localhost ls /"
@@ -55,7 +77,7 @@ netstat -tupan
 #echo "ssh -p 30022 hduser@127.0.0.1 ls /"
 #ssh -p 30022 hduser@127.0.0.1 ls /
 #echo "ssh -p 30022 hduser@10.188.2.111 ls /"
-#ssh -o StrictHostKeyChecking=no -p 30022 hduser@10.188.2.111 ls /
+#runuser -u hduser -- ssh -o StrictHostKeyChecking=accept-new -p 30022 hduser@10.188.2.111 ls /
 #echo "ssh -p 30022 hduser@10.42.153.0 ls /"
 #ssh -p 30022 hduser@10.42.153.0 ls /
 #echo "ssh -p 30022 hduser@10.42.153.1 ls /"
@@ -67,6 +89,16 @@ netstat -tupan
 
 #echo "Waiting for other servers to come online..."
 #sleep 60s
+exit 0
+echo "Testing password ssh auth"
+runuser -u hduser -- sshpass -p "password" ssh -p 30022 -o StrictHostKeyChecking=accept-new hduser@$node_ip "ls /"
+
+echo "cat /home/hduser/sshd_log.txt"
+cat /home/hduser/sshd_log.txt
+
+
+echo "ls -la /home/hduser/.ssh"
+runuser -u hduser -- ls -la /home/hduser/.ssh
 
 if [ ! -f /opt/hadoop/initialized ] ; then
   found_self=0
@@ -79,11 +111,23 @@ if [ ! -f /opt/hadoop/initialized ] ; then
     fi
     found_self=1
     node_ip=$(echo $node | cut -f2 -d:)
-    echo "Sharing SSH key with hduser@$node_ip on $node_name"
-    echo "mypassword" | runuser -u hduser -- sshpass ssh-copy-id -f -i /home/hduser/.ssh/id_rsa.pub -p 30022 hduser@$node_ip
-    ssh -p 30022 hduser@$node_ip cat .ssh/id_rsa.pub | tee -a /home/hduser/.ssh/authorized_keys
+    #echo "Testing password SSH"
+    #runuser -u hduser -- sshpass -p "mypassword" ssh -p 30022 -o StrictHostKeyChecking=accept-new hduser@$node_ip ls /
+    echo "Manually sharing SSH key with hduser@$node_ip on $node_name"
+    cat /home/hduser/.ssh/id_rsa.pub | runuser -u hduser -- sshpass -p "password" ssh -p 30022 -o StrictHostKeyChecking=accept-new hduser@$node_ip 'cat >> /home/hduser/.ssh/authorized_keys'
+    #runuser -u hduser -- sshpass -p "mypasssword" ssh-copy-id -i /home/hduser/.ssh/id_rsa.pub -p 30022 hduser@$node_ip
+    #echo "ls -la /home/hduser/.ssh"
+    #runuser -u hduser -- ls -la /home/hduser/.ssh
+    echo "cat /home/hduser/.ssh/authorized_keys"
+    runuser -u hduser -- cat /home/hduser/.ssh/authorized_keys
+    echo "Reversing ssh-copy-id..."
+    runuser -u hduser -- ssh -p 30022 -o StrictHostKeyCHecking=accept-new hduser@$node_ip cat .ssh/id_rsa.pub | tee -a /home/hduser/.ssh/authorized_keys
+
   done
 fi
+
+echo "cat /home/hduser/sshd_log.txt"
+cat /home/hduser/sshd_log.txt
 
 if [ "$node_type" = "namenode" ] ; then
   if [ ! -f /opt/hadoop/initialized ] ; then
@@ -102,5 +146,5 @@ runuser -u hduser -- touch /opt/hadoop/initialized
 while true
 do
   echo "Staying active..."
-  sleep 10s
+  sleep 60s
 done
