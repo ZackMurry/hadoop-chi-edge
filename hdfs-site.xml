@@ -16,8 +16,45 @@
         <value>master:30001</value>
     </property>
     <property>
+        <name>dfs.namenode.secondary.http-address</name>
+        <value>master:30007</value>
+    </property>
+    <property>
+        <name>dfs.datanode.address</name>
+        <value>master:30008</value>
+    </property>
+    <property>
+        <name>dfs.datanode.http.address</name>
+        <value>master:30009</value>
+    </property>
+    <property>
+        <name>dfs.datanode.https.address</name>
+        <value>master:30010</value>
+    </property>
+    <property>
+        <name>dfs.datanode.ipc.address</name>
+        <value>master:30011</value>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address</name>
+        <value>master:30012</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address</name>
+        <value>master:30013</value>
+    </property>
+    
+    <property>
         <name>dfs.replication</name>
-        <value>2</value> # Based on the number of workers you have
+        <value>2</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-bind-host</name>
+        <value>0.0.0.0</value>
+        <description>
+            controls what IP address the NameNode binds to.
+            0.0.0.0 means all available.
+        </description>
     </property>
 </configuration>
 

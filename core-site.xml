@@ -6,8 +6,12 @@
         <value>hdfs://master:30006/</value>
     </property>
     <property>
-        <name>fs.default.FS</name>
+        <name>fs.defaultFS</name>
         <value>hdfs://master:30006/</value>
+    </property>
+    <property>
+        <name>hadoop.tmp.dir</name>
+        <value>/opt/hadoop/tmp</value>
     </property>
 </configuration>
 
