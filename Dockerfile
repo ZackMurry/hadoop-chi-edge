@@ -15,5 +15,5 @@ WORKDIR /usr/src/app
 
 EXPOSE 30001 30002 30003 30004 30005 30006 30022
 
-CMD bash start.sh
+CMD sleep infinity
 
